@@ -1,31 +1,35 @@
 trigger:
   branches:
     include:
-      - main  # Trigger pipeline on changes to the main branch
+      - main  # Запускає пайплайн при змінах в main-гілці
 
 pool:
   vmImage: 'ubuntu-latest'
 
 variables:
   GOOGLE_APPLICATION_CREDENTIALS: $(System.DefaultWorkingDirectory)/gcp-key.json
-  BUCKET_NAME: 'researchsite1'  # Replace with your actual bucket name
+  BUCKET_NAME: 'researchsite1'  # Ім'я вашого GCS Bucket
 
 steps:
+  # Завантаження файлу облікового запису
   - task: DownloadSecureFile@1
     inputs:
-      secureFile: 'gcp-key.json'  # Upload the GCP key file as a Secure File in Azure DevOps
+      secureFile: 'gcp-key.json'  # Ім'я завантаженого JSON-файлу
 
+  # Встановлення Google Cloud SDK
   - task: UsePythonVersion@0
     inputs:
-      versionSpec: '3.11'
+      versionSpec: '3.x'
       addToPath: true
 
   - script: |
       python -m pip install --upgrade pip
       pip install google-cloud-storage
-    displayName: 'Install Google Cloud SDK'
+    displayName: 'Install Google Cloud Storage library for Python'
 
+  # Завантаження файлів проекту в GCS
   - script: |
-      echo "Uploading files to GCP bucket..."
+      echo "Uploading files to GCS bucket..."
       export GOOGLE_APPLICATION_CREDENTIALS=$(GOOGLE_APPLICATION_CREDENTIALS)
       python -c "
+
