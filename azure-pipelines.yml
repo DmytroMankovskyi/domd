@@ -1,17 +1,26 @@
-# HTML
-# Archive your static HTML project and save it with the build record.
-# Add steps that build, run tests, deploy, and more:
-# https://aka.ms/yaml
-
 trigger:
-- main
+  branches:
+    include:
+      - main  # Trigger the pipeline on changes to the main branch
 
 pool:
-  vmImage: ubuntu-latest
+  vmImage: 'ubuntu-latest'
 
 steps:
-- task: ArchiveFiles@2
+- task: UsePythonVersion@0
   inputs:
-    rootFolderOrFile: '$(build.sourcesDirectory)'
-    includeRootFolder: false
-- task: PublishBuildArtifacts@1
+    versionSpec: '3.x'
+    addToPath: true
+
+- script: |
+    python3 -m pip install --upgrade google-auth google-cloud-storage
+  displayName: 'Install Google Cloud Storage SDK'
+
+- script: |
+    echo ${GCP_CREDENTIALS} > gcp-key.json
+    gcloud auth activate-service-account --key-file=gcp-key.json
+    gsutil cp index.html gs://researchsite1/
+  env:
+    GCP_CREDENTIALS: $(GCP_CREDENTIALS)
+  displayName: 'Deploy to GCS'
+
